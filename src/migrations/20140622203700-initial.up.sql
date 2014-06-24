@@ -12,35 +12,27 @@ ALTER TABLE public.certnames OWNER TO ken;
 ALTER TABLE ONLY certnames
     ADD CONSTRAINT certnames_pkey PRIMARY KEY (certname);
 --;;
-CREATE TABLE fact_types (
+CREATE TABLE value_types (
     id bigint NOT NULL,
-    name character varying(32)
+    type character varying(32)
 );
 --;;
-ALTER TABLE public.fact_types OWNER TO ken;
+ALTER TABLE ONLY value_types
+    ADD CONSTRAINT value_types_pkey PRIMARY KEY (id);
 --;;
-CREATE SEQUENCE fact_types_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1;
+ALTER TABLE value_types OWNER TO ken;
 --;;
-ALTER TABLE public.fact_types_id_seq OWNER TO ken;
+INSERT INTO value_types (id, type) values (0, 'string');
 --;;
-ALTER SEQUENCE fact_types_id_seq OWNED BY fact_types.id;
+INSERT INTO value_types (id, type) values (1, 'number');
 --;;
-ALTER TABLE ONLY fact_types ALTER COLUMN id SET DEFAULT nextval('fact_types_id_seq'::regclass);
+INSERT INTO value_types (id, type) values (2, 'boolean');
 --;;
-ALTER TABLE ONLY fact_types
-    ADD CONSTRAINT fact_types_name_key UNIQUE (name);
---;;
-ALTER TABLE ONLY fact_types
-    ADD CONSTRAINT fact_types_pkey PRIMARY KEY (id);
+INSERT INTO value_types (id, type) values (3, 'null');
 --;;
 CREATE TABLE fact_paths (
     id bigint NOT NULL,
-    type_id bigint,
+    value_type_id bigint,
     path text
 );
 --;;
@@ -60,19 +52,19 @@ ALTER SEQUENCE fact_paths_id_seq OWNED BY fact_paths.id;
 ALTER TABLE ONLY fact_paths ALTER COLUMN id SET DEFAULT nextval('fact_paths_id_seq'::regclass);
 --;;
 ALTER TABLE ONLY fact_paths
-    ADD CONSTRAINT fact_paths_path_type_id_key UNIQUE (path, type_id);
+    ADD CONSTRAINT fact_paths_path_type_id_key UNIQUE (path, value_type_id);
 --;;
 ALTER TABLE ONLY fact_paths
     ADD CONSTRAINT fact_paths_pkey PRIMARY KEY (id);
 --;;
 CREATE INDEX fact_paths_path_text_idx ON fact_paths USING btree (path);
 --;;
-CREATE INDEX fki_fact_paths_type_id ON fact_paths USING btree (type_id);
+CREATE INDEX fki_fact_paths_type_id ON fact_paths USING btree (value_type_id);
 --;;
 CREATE INDEX trgm_idx ON fact_paths USING gin (path gin_trgm_ops);
 --;;
 ALTER TABLE ONLY fact_paths
-    ADD CONSTRAINT fact_paths_type_id FOREIGN KEY (type_id) REFERENCES fact_types(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
+    ADD CONSTRAINT fact_paths_value_type_id FOREIGN KEY (value_type_id) REFERENCES value_types(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
 --;;
 CREATE TABLE fact_values (
     id bigint NOT NULL,
@@ -104,6 +96,11 @@ ALTER TABLE ONLY fact_values
 --;;
 ALTER TABLE ONLY fact_values
     ADD CONSTRAINT fact_values_pkey PRIMARY KEY (id);
+--;;
+ALTER TABLE fact_values
+  ADD CONSTRAINT fact_values_path_id_fkey FOREIGN KEY (path_id)
+      REFERENCES fact_paths (id) MATCH SIMPLE
+      ON UPDATE RESTRICT ON DELETE RESTRICT;
 --;;
 CREATE INDEX fact_values_path_id_idx ON fact_values USING btree (path_id);
 --;;

@@ -10,7 +10,8 @@
                  [com.jolbox/bonecp "0.8.0.RELEASE" :exclusions [org.slf4j/slf4j-api]]
                  [org.clojure/java.jdbc "0.3.3"]
                  [org.postgresql/postgresql "9.3-1101-jdbc41"]
-                 [migratus "0.7.0"]]
+                 [migratus "0.7.0"]
+                 [prismatic/schema "0.2.4"]]
   :plugins [[migratus-lein "0.1.0" :exclusions [org.clojure/clojure]]]
   :migratus {:store :database
              :migration-dir "migrations"

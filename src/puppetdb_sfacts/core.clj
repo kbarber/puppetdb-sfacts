@@ -34,7 +34,7 @@
 ;; TODO still need to work out what this should be, either way we need special
 ;; handling around it.
 (def path-delimiter
-  ":")
+  "~#&#~")
 
 ;; DB HELPERS
 
@@ -107,7 +107,7 @@
 (s/defn ^:always-validate random-string
   "Create random string"
   [length :- s/Int]
-  (let [ascii-codes (concat (range 97 123))]
+  (let [ascii-codes (concat (range 97 123) (range 1000 2000))]
     (apply str (repeatedly length #(char (rand-nth ascii-codes))))))
 
 (s/defn ^:always-validate random-strings
@@ -142,18 +142,35 @@
   (let [result  (jdbc/query db ["select id from value_types where type = ?" type])
         type-id (:id (first result))
         encoded-path (encode-fact-path path)]
-    (jdbc/insert! db "fact_paths" {"value_type_id" type-id "path" encoded-path})))
+    (jdbc/insert! db "fact_paths" {"value_type_id" type-id
+                                   "path" encoded-path})))
 
 ;; RANDOM LOADERS
 
-(s/defn ^:always-validate insert-certnames
+(s/defn ^:always-validate insert-random-certnames
   "Load up a series of random certnames"
   [db
    amount :- s/Int]
   (doseq [string  (random-strings 10 30)]
     (insert-certname db string)))
 
+(s/defn ^:always-validate insert-random-paths
+  "Load up a series of random paths"
+  [db
+   amount :- s/Int]
+  (loop [x amount]
+    (insert-fact-path db (random-strings 10 4) "string")
+    (when (> x 0)
+      (recur (dec x)))))
+
 ;; OTHER
+
+(s/defn ^:always-validate grab-path
+  "Return an array of path elements based on id"
+  [db
+   id :- s/Int]
+  (jdbc/query db ["select id, regexp_split_to_array(path, ?) as path from fact_paths where id = ?"
+                  path-delimiter id]))
 
 (defn foo
   []

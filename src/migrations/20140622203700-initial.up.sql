@@ -61,7 +61,7 @@ CREATE INDEX fact_paths_path_text_idx ON fact_paths USING btree (path);
 --;;
 CREATE INDEX fki_fact_paths_type_id ON fact_paths USING btree (value_type_id);
 --;;
-CREATE INDEX trgm_idx ON fact_paths USING gin (path gin_trgm_ops);
+CREATE INDEX trgm_idx ON fact_paths USING gist (path gist_trgm_ops);
 --;;
 ALTER TABLE ONLY fact_paths
     ADD CONSTRAINT fact_paths_value_type_id FOREIGN KEY (value_type_id) REFERENCES value_types(id) ON UPDATE RESTRICT ON DELETE RESTRICT;
